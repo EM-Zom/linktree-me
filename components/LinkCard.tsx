@@ -7,6 +7,7 @@ interface Link {
   title: string
   url: string
   editable: boolean
+  category?: string
 }
 
 interface LinkCardProps {
@@ -21,9 +22,19 @@ export default function LinkCard({ link, onEdit, onDelete, canEdit }: LinkCardPr
     window.open(link.url, '_blank', 'noopener,noreferrer')
   }
 
-  const getDomain = (url: string) => {
+  const getDisplayUrl = (url: string, category?: string) => {
     try {
-      const domain = new URL(url).hostname.replace('www.', '')
+      // Para Instagram, extrair o handle
+      if (category === 'insta' || url.includes('instagram.com/')) {
+        const match = url.match(/instagram\.com\/([^\/\?]+)/)
+        if (match && match[1]) {
+          return `@${match[1]}`
+        }
+      }
+      
+      // Para outros, mostrar domínio
+      const urlObj = new URL(url)
+      const domain = urlObj.hostname.replace('www.', '')
       return domain.length > 30 ? domain.substring(0, 30) + '...' : domain
     } catch {
       return url.length > 30 ? url.substring(0, 30) + '...' : url
@@ -49,7 +60,7 @@ export default function LinkCard({ link, onEdit, onDelete, canEdit }: LinkCardPr
             </h3>
             <div className="flex items-center gap-2">
               <p className="text-sm text-gray-400 truncate font-medium group-hover:text-gray-300 transition-colors">
-                {getDomain(link.url)}
+                {getDisplayUrl(link.url, link.category)}
               </p>
             </div>
           </div>

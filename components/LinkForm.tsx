@@ -159,6 +159,8 @@ export default function LinkForm({ link, defaultCategory, onSubmit, onCancel }: 
         >
           <option value="normal">Links Normais</option>
           <option value="insta">📷 Instagram</option>
+          <option value="livro">📚 Livro</option>
+          <option value="spotify">🎵 Spotify</option>
         </select>
       </div>
 

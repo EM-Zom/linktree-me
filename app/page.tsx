@@ -18,14 +18,14 @@ interface Link {
 
 export default function Home() {
   const [links, setLinks] = useState<Link[]>([])
-  const [activeTab, setActiveTab] = useState<'links' | 'insta' | 'edit'>('links')
+  const [activeTab, setActiveTab] = useState<'links' | 'insta' | 'livro' | 'spotify' | 'edit'>('links')
   const [editingLink, setEditingLink] = useState<Link | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [showAdminPanel, setShowAdminPanel] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [linkToDelete, setLinkToDelete] = useState<Link | null>(null)
-  const [previousTab, setPreviousTab] = useState<'links' | 'insta'>('links')
+  const [previousTab, setPreviousTab] = useState<'links' | 'insta' | 'livro' | 'spotify'>('links')
 
   useEffect(() => {
     // Verificar se está autenticado
@@ -71,9 +71,15 @@ export default function Home() {
         body: JSON.stringify(link),
       })
       if (response.ok) {
-        const category = link.category === 'insta' ? 'insta' : undefined
-        loadLinks(category)
-        setActiveTab(link.category === 'insta' ? 'insta' : 'links')
+        const category = link.category || 'normal'
+        const tabMap: Record<string, 'links' | 'insta' | 'livro' | 'spotify'> = {
+          'insta': 'insta',
+          'livro': 'livro',
+          'spotify': 'spotify',
+          'normal': 'links'
+        }
+        loadLinks(category === 'normal' ? undefined : category)
+        setActiveTab(tabMap[category] || 'links')
         setEditingLink(null)
       }
     } catch (error) {
@@ -110,8 +116,13 @@ export default function Home() {
         method: 'DELETE',
       })
       if (response.ok) {
-        const category = activeTab === 'insta' ? 'insta' : undefined
-        loadLinks(category)
+        const categoryMap: Record<string, string | undefined> = {
+          'insta': 'insta',
+          'livro': 'livro',
+          'spotify': 'spotify',
+          'links': undefined
+        }
+        loadLinks(categoryMap[activeTab] || undefined)
         setLinkToDelete(null)
       }
     } catch (error) {
@@ -125,6 +136,10 @@ export default function Home() {
       // Atualizar previousTab baseado na categoria do link
       if (link.category === 'insta') {
         setPreviousTab('insta')
+      } else if (link.category === 'livro') {
+        setPreviousTab('livro')
+      } else if (link.category === 'spotify') {
+        setPreviousTab('spotify')
       } else {
         setPreviousTab('links')
       }
@@ -139,6 +154,10 @@ export default function Home() {
     // Filtrar por categoria
     if (activeTab === 'insta') {
       filtered = links.filter(link => (link.category || 'normal') === 'insta')
+    } else if (activeTab === 'livro') {
+      filtered = links.filter(link => (link.category || 'normal') === 'livro')
+    } else if (activeTab === 'spotify') {
+      filtered = links.filter(link => (link.category || 'normal') === 'spotify')
     } else if (activeTab === 'links') {
       filtered = links.filter(link => (link.category || 'normal') === 'normal')
     }
@@ -156,11 +175,16 @@ export default function Home() {
     return filtered
   }, [links, searchTerm, activeTab])
   
-  // Carregar links quando mudar de aba (apenas para links e insta)
+  // Carregar links quando mudar de aba
   useEffect(() => {
-    if (activeTab === 'links' || activeTab === 'insta') {
-      const category = activeTab === 'insta' ? 'insta' : undefined
-      loadLinks(category)
+    if (activeTab === 'links' || activeTab === 'insta' || activeTab === 'livro' || activeTab === 'spotify') {
+      const categoryMap: Record<string, string | undefined> = {
+        'insta': 'insta',
+        'livro': 'livro',
+        'spotify': 'spotify',
+        'links': undefined
+      }
+      loadLinks(categoryMap[activeTab])
     }
   }, [activeTab]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -207,21 +231,21 @@ export default function Home() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-md animate-fade-in-up">
         {/* Tabs */}
-        <div className="flex gap-2 mb-8 glass-strong rounded-2xl p-1.5 shadow-xl border border-emergency-red/20">
+        <div className="flex gap-1.5 mb-8 glass-strong rounded-2xl p-1 shadow-xl border border-emergency-red/20">
           <button
             onClick={() => {
               setPreviousTab('links')
               setActiveTab('links')
               setEditingLink(null)
             }}
-            className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden ${
+            className={`flex-1 py-2.5 px-3 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden text-sm ${
               activeTab === 'links'
                 ? 'bg-gradient-to-r from-emergency-red to-emergency-red-dark text-white shadow-lg scale-105 red-glow'
                 : 'text-gray-300 hover:bg-emergency-red/10 hover:text-white hover:scale-[1.02] border border-emergency-red/10'
             }`}
           >
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              <FiLink className="text-lg" />
+            <span className="relative z-10 flex items-center justify-center gap-1.5">
+              <FiLink className="text-base" />
               Links
             </span>
           </button>
@@ -231,14 +255,46 @@ export default function Home() {
               setActiveTab('insta')
               setEditingLink(null)
             }}
-            className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden ${
+            className={`flex-1 py-2.5 px-3 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden ${
               activeTab === 'insta'
                 ? 'bg-gradient-to-r from-emergency-red to-emergency-red-dark text-white shadow-lg scale-105 red-glow'
                 : 'text-gray-300 hover:bg-emergency-red/10 hover:text-white hover:scale-[1.02] border border-emergency-red/10'
             }`}
           >
-            <span className="relative z-10 flex items-center justify-center gap-2 text-xl">
+            <span className="relative z-10 flex items-center justify-center text-lg">
               📷
+            </span>
+          </button>
+          <button
+            onClick={() => {
+              setPreviousTab('livro')
+              setActiveTab('livro')
+              setEditingLink(null)
+            }}
+            className={`flex-1 py-2.5 px-3 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden ${
+              activeTab === 'livro'
+                ? 'bg-gradient-to-r from-emergency-red to-emergency-red-dark text-white shadow-lg scale-105 red-glow'
+                : 'text-gray-300 hover:bg-emergency-red/10 hover:text-white hover:scale-[1.02] border border-emergency-red/10'
+            }`}
+          >
+            <span className="relative z-10 flex items-center justify-center text-lg">
+              📚
+            </span>
+          </button>
+          <button
+            onClick={() => {
+              setPreviousTab('spotify')
+              setActiveTab('spotify')
+              setEditingLink(null)
+            }}
+            className={`flex-1 py-2.5 px-3 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden ${
+              activeTab === 'spotify'
+                ? 'bg-gradient-to-r from-emergency-red to-emergency-red-dark text-white shadow-lg scale-105 red-glow'
+                : 'text-gray-300 hover:bg-emergency-red/10 hover:text-white hover:scale-[1.02] border border-emergency-red/10'
+            }`}
+          >
+            <span className="relative z-10 flex items-center justify-center text-lg">
+              🎵
             </span>
           </button>
           <button
@@ -246,21 +302,21 @@ export default function Home() {
               setEditingLink(null)
               setActiveTab('edit')
             }}
-            className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden ${
+            className={`flex-1 py-2.5 px-3 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden text-sm ${
               activeTab === 'edit'
                 ? 'bg-gradient-to-r from-emergency-red to-emergency-red-dark text-white shadow-lg scale-105 red-glow'
                 : 'text-gray-300 hover:bg-emergency-red/10 hover:text-white hover:scale-[1.02] border border-emergency-red/10'
             }`}
           >
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              <FiHeart className="text-lg" />
+            <span className="relative z-10 flex items-center justify-center gap-1.5">
+              <FiHeart className="text-base" />
               {editingLink ? 'Editar' : 'Adicionar'}
             </span>
           </button>
         </div>
 
         {/* Tab Content */}
-        {(activeTab === 'links' || activeTab === 'insta') && (
+        {(activeTab === 'links' || activeTab === 'insta' || activeTab === 'livro' || activeTab === 'spotify') && (
           <div className="space-y-4">
             {/* Barra de Pesquisa */}
             {filteredLinks.length > 0 && (
@@ -359,14 +415,14 @@ export default function Home() {
           <div className="glass-strong rounded-2xl shadow-xl p-6 border border-emergency-red/20 animate-fade-in-up red-glow">
             <LinkForm
               link={editingLink}
-              defaultCategory={editingLink ? undefined : (previousTab === 'insta' ? 'insta' : 'normal')}
+              defaultCategory={editingLink ? undefined : (previousTab === 'insta' ? 'insta' : previousTab === 'livro' ? 'livro' : previousTab === 'spotify' ? 'spotify' : 'normal')}
               onSubmit={async (link) => {
                 if (editingLink) {
                   await handleUpdateLink(editingLink.id, link)
                 } else {
                   await handleAddLink(link)
                 }
-                const category = link.category === 'insta' ? 'insta' : undefined
+                const category = link.category && link.category !== 'normal' ? link.category : undefined
                 loadLinks(category)
               }}
               onCancel={() => {
@@ -407,8 +463,13 @@ export default function Home() {
           links={links}
           onClose={() => setShowAdminPanel(false)}
           onUpdate={() => {
-            const category = activeTab === 'insta' ? 'insta' : undefined
-            loadLinks(category)
+            const categoryMap: Record<string, string | undefined> = {
+              'insta': 'insta',
+              'livro': 'livro',
+              'spotify': 'spotify',
+              'links': undefined
+            }
+            loadLinks(categoryMap[activeTab] || undefined)
           }}
         />
       )}
