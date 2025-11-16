@@ -11,10 +11,12 @@ async function ensureDatabaseInitialized() {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await ensureDatabaseInitialized()
-    const links = await getAllLinks()
+    const { searchParams } = new URL(request.url)
+    const category = searchParams.get('category') || undefined
+    const links = await getAllLinks(category)
     return NextResponse.json(links)
   } catch (error) {
     console.error('Erro ao buscar links:', error)

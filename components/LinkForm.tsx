@@ -8,29 +8,34 @@ interface Link {
   title: string
   url: string
   editable: boolean
+  category?: string
 }
 
 interface LinkFormProps {
   link: Link | null
+  defaultCategory?: string
   onSubmit: (link: Omit<Link, 'id'>) => void
   onCancel: () => void
 }
 
-export default function LinkForm({ link, onSubmit, onCancel }: LinkFormProps) {
+export default function LinkForm({ link, defaultCategory, onSubmit, onCancel }: LinkFormProps) {
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
+  const [category, setCategory] = useState<string>('normal')
   const [errors, setErrors] = useState<{ title?: string; url?: string }>({})
 
   useEffect(() => {
     if (link) {
       setTitle(link.title)
       setUrl(link.url)
+      setCategory(link.category || 'normal')
     } else {
       setTitle('')
       setUrl('')
+      setCategory(defaultCategory || 'normal')
     }
     setErrors({})
-  }, [link])
+  }, [link, defaultCategory])
 
   const validateUrl = (url: string) => {
     try {
@@ -65,6 +70,7 @@ export default function LinkForm({ link, onSubmit, onCancel }: LinkFormProps) {
       title: title.trim(),
       url: formattedUrl,
       editable: link?.editable ?? true,
+      category: category,
     })
   }
 
@@ -136,6 +142,24 @@ export default function LinkForm({ link, onSubmit, onCancel }: LinkFormProps) {
             <span>⚠️</span> {errors.url}
           </p>
         )}
+      </div>
+
+      <div>
+        <label htmlFor="category" className="block text-sm font-semibold text-gray-300 mb-2">
+          <span className="flex items-center gap-2">
+            <FiLink2 className="text-emergency-red" />
+            Categoria
+          </span>
+        </label>
+        <select
+          id="category"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="w-full px-4 py-3.5 bg-emergency-black-dark border-2 border-emergency-red/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-emergency-red/50 focus:border-emergency-red text-white transition-all duration-300"
+        >
+          <option value="normal">Links Normais</option>
+          <option value="insta">📷 Instagram</option>
+        </select>
       </div>
 
       <div className="flex gap-3 pt-4">

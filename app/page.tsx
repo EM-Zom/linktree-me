@@ -6,22 +6,26 @@ import LinkCard from '@/components/LinkCard'
 import LinkForm from '@/components/LinkForm'
 import AdminPanel from '@/components/AdminPanel'
 import LoginModal from '@/components/LoginModal'
+import DeleteConfirmModal from '@/components/DeleteConfirmModal'
 
 interface Link {
   id: string
   title: string
   url: string
   editable: boolean
+  category?: string
 }
 
 export default function Home() {
   const [links, setLinks] = useState<Link[]>([])
-  const [activeTab, setActiveTab] = useState<'links' | 'edit' | 'admin'>('links')
+  const [activeTab, setActiveTab] = useState<'links' | 'insta' | 'edit'>('links')
   const [editingLink, setEditingLink] = useState<Link | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [showAdminPanel, setShowAdminPanel] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [linkToDelete, setLinkToDelete] = useState<Link | null>(null)
+  const [previousTab, setPreviousTab] = useState<'links' | 'insta'>('links')
 
   useEffect(() => {
     // Verificar se está autenticado
@@ -39,15 +43,21 @@ export default function Home() {
       setIsAdmin(adminStatus)
     }
     
-    // Carregar links
+    // Carregar links iniciais (normais)
     loadLinks()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const loadLinks = async () => {
+  const loadLinks = async (category?: string) => {
     try {
-      const response = await fetch('/api/links')
+      const url = category ? `/api/links?category=${category}` : '/api/links'
+      const response = await fetch(url)
       const data = await response.json()
-      setLinks(data)
+      // Ordenar alfabeticamente
+      const sorted = data.sort((a: Link, b: Link) => 
+        a.title.localeCompare(b.title, 'pt-BR', { sensitivity: 'base' })
+      )
+      setLinks(sorted)
     } catch (error) {
       console.error('Erro ao carregar links:', error)
     }
@@ -61,8 +71,9 @@ export default function Home() {
         body: JSON.stringify(link),
       })
       if (response.ok) {
-        loadLinks()
-        setActiveTab('links')
+        const category = link.category === 'insta' ? 'insta' : undefined
+        loadLinks(category)
+        setActiveTab(link.category === 'insta' ? 'insta' : 'links')
         setEditingLink(null)
       }
     } catch (error) {
@@ -87,13 +98,21 @@ export default function Home() {
     }
   }
 
-  const handleDeleteLink = async (id: string) => {
+  const handleDeleteClick = (link: Link) => {
+    setLinkToDelete(link)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!linkToDelete) return
+    
     try {
-      const response = await fetch(`/api/links/${id}`, {
+      const response = await fetch(`/api/links/${linkToDelete.id}`, {
         method: 'DELETE',
       })
       if (response.ok) {
-        loadLinks()
+        const category = activeTab === 'insta' ? 'insta' : undefined
+        loadLinks(category)
+        setLinkToDelete(null)
       }
     } catch (error) {
       console.error('Erro ao deletar link:', error)
@@ -103,22 +122,47 @@ export default function Home() {
   const handleEditClick = (link: Link) => {
     if (link.editable || isAdmin) {
       setEditingLink(link)
+      // Atualizar previousTab baseado na categoria do link
+      if (link.category === 'insta') {
+        setPreviousTab('insta')
+      } else {
+        setPreviousTab('links')
+      }
       setActiveTab('edit')
     }
   }
 
-  // Filtrar links baseado no termo de busca
+  // Filtrar links baseado no termo de busca e categoria
   const filteredLinks = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return links
+    let filtered = links
+    
+    // Filtrar por categoria
+    if (activeTab === 'insta') {
+      filtered = links.filter(link => (link.category || 'normal') === 'insta')
+    } else if (activeTab === 'links') {
+      filtered = links.filter(link => (link.category || 'normal') === 'normal')
     }
-    const term = searchTerm.toLowerCase()
-    return links.filter(
-      (link) =>
-        link.title.toLowerCase().includes(term) ||
-        link.url.toLowerCase().includes(term)
-    )
-  }, [links, searchTerm])
+    
+    // Filtrar por termo de busca
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter(
+        (link) =>
+          link.title.toLowerCase().includes(term) ||
+          link.url.toLowerCase().includes(term)
+      )
+    }
+    
+    return filtered
+  }, [links, searchTerm, activeTab])
+  
+  // Carregar links quando mudar de aba (apenas para links e insta)
+  useEffect(() => {
+    if (activeTab === 'links' || activeTab === 'insta') {
+      const category = activeTab === 'insta' ? 'insta' : undefined
+      loadLinks(category)
+    }
+  }, [activeTab]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="min-h-screen pb-20 relative overflow-hidden">
@@ -136,25 +180,25 @@ export default function Home() {
         {/* Brilho vermelho no topo */}
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emergency-red to-transparent"></div>
         
-        <div className="container mx-auto px-4 py-6 relative z-10">
+        <div className="container mx-auto px-4 py-3 relative z-10">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 animate-slide-in">
-              <div className="bg-emergency-red/30 backdrop-blur-md p-3.5 rounded-xl shadow-lg hover:bg-emergency-red/40 transition-all duration-300 hover:scale-105 border-2 border-emergency-red/50 red-glow">
-                <FiZap className="text-2xl text-white" />
+            <div className="flex items-center gap-3 animate-slide-in">
+              <div className="bg-emergency-red/30 backdrop-blur-md p-2.5 rounded-xl shadow-lg hover:bg-emergency-red/40 transition-all duration-300 hover:scale-105 border-2 border-emergency-red/50 red-glow">
+                <FiZap className="text-xl text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-extrabold tracking-tight text-white drop-shadow-lg" style={{ textShadow: '0 2px 10px rgba(239, 68, 68, 0.5)' }}>
+                <h1 className="text-xl font-extrabold tracking-tight text-white drop-shadow-lg" style={{ textShadow: '0 2px 10px rgba(239, 68, 68, 0.5)' }}>
                   Links Emergência
                 </h1>
-                <p className="text-sm text-emergency-red font-semibold mt-0.5 tracking-wide">Médicos Emergencistas</p>
+                <p className="text-xs text-emergency-red font-semibold tracking-wide">Médicos Emergencistas</p>
               </div>
             </div>
             <button
               onClick={() => isAdmin ? setShowAdminPanel(true) : setShowLoginModal(true)}
-              className="bg-emergency-red/30 backdrop-blur-md hover:bg-emergency-red/40 p-3.5 rounded-xl transition-all duration-300 hover:scale-110 shadow-lg animate-fade-in-up border-2 border-emergency-red/50 red-glow hover:red-glow-strong"
+              className="bg-emergency-red/30 backdrop-blur-md hover:bg-emergency-red/40 p-2.5 rounded-xl transition-all duration-300 hover:scale-110 shadow-lg animate-fade-in-up border-2 border-emergency-red/50 red-glow hover:red-glow-strong"
               aria-label={isAdmin ? "Painel Administrativo" : "Login"}
             >
-              <FiSettings className="text-xl text-white" />
+              <FiSettings className="text-lg text-white" />
             </button>
           </div>
         </div>
@@ -163,13 +207,14 @@ export default function Home() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-md animate-fade-in-up">
         {/* Tabs */}
-        <div className="flex gap-3 mb-8 glass-strong rounded-2xl p-1.5 shadow-xl border border-emergency-red/20">
+        <div className="flex gap-2 mb-8 glass-strong rounded-2xl p-1.5 shadow-xl border border-emergency-red/20">
           <button
             onClick={() => {
+              setPreviousTab('links')
               setActiveTab('links')
               setEditingLink(null)
             }}
-            className={`flex-1 py-3 px-5 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden ${
+            className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden ${
               activeTab === 'links'
                 ? 'bg-gradient-to-r from-emergency-red to-emergency-red-dark text-white shadow-lg scale-105 red-glow'
                 : 'text-gray-300 hover:bg-emergency-red/10 hover:text-white hover:scale-[1.02] border border-emergency-red/10'
@@ -182,10 +227,26 @@ export default function Home() {
           </button>
           <button
             onClick={() => {
-              setActiveTab('edit')
+              setPreviousTab('insta')
+              setActiveTab('insta')
               setEditingLink(null)
             }}
-            className={`flex-1 py-3 px-5 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden ${
+            className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden ${
+              activeTab === 'insta'
+                ? 'bg-gradient-to-r from-emergency-red to-emergency-red-dark text-white shadow-lg scale-105 red-glow'
+                : 'text-gray-300 hover:bg-emergency-red/10 hover:text-white hover:scale-[1.02] border border-emergency-red/10'
+            }`}
+          >
+            <span className="relative z-10 flex items-center justify-center gap-2 text-xl">
+              📷
+            </span>
+          </button>
+          <button
+            onClick={() => {
+              setEditingLink(null)
+              setActiveTab('edit')
+            }}
+            className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden ${
               activeTab === 'edit'
                 ? 'bg-gradient-to-r from-emergency-red to-emergency-red-dark text-white shadow-lg scale-105 red-glow'
                 : 'text-gray-300 hover:bg-emergency-red/10 hover:text-white hover:scale-[1.02] border border-emergency-red/10'
@@ -199,10 +260,10 @@ export default function Home() {
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'links' && (
+        {(activeTab === 'links' || activeTab === 'insta') && (
           <div className="space-y-4">
             {/* Barra de Pesquisa */}
-            {links.length > 0 && (
+            {filteredLinks.length > 0 && (
               <div className="glass-strong rounded-2xl shadow-xl border border-emergency-red/20 animate-fade-in-up">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -242,7 +303,7 @@ export default function Home() {
             )}
 
             {/* Lista de Links */}
-            {links.length === 0 ? (
+            {filteredLinks.length === 0 && !searchTerm ? (
               <div className="text-center py-16 glass-strong rounded-2xl shadow-xl border border-emergency-red/20 animate-fade-in-up red-glow">
                 <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emergency-red/30 to-emergency-red/10 rounded-2xl mb-6 border border-emergency-red/30">
                   <FiLink className="text-4xl text-emergency-red" />
@@ -250,7 +311,10 @@ export default function Home() {
                 <h3 className="text-xl font-bold text-white mb-2">Nenhum link disponível</h3>
                 <p className="text-gray-400 mb-4">Comece adicionando seus primeiros links</p>
                 <button
-                  onClick={() => setActiveTab('edit')}
+                  onClick={() => {
+                    setActiveTab('edit')
+                    setEditingLink(null)
+                  }}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emergency-red to-emergency-red-dark text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 red-glow hover:red-glow-strong border border-emergency-red/30"
                 >
                   <FiHeart className="text-lg" />
@@ -282,7 +346,7 @@ export default function Home() {
                   <LinkCard
                     link={link}
                     onEdit={() => handleEditClick(link)}
-                    onDelete={() => handleDeleteLink(link.id)}
+                    onDelete={() => handleDeleteClick(link)}
                     canEdit={link.editable || isAdmin}
                   />
                 </div>
@@ -295,13 +359,19 @@ export default function Home() {
           <div className="glass-strong rounded-2xl shadow-xl p-6 border border-emergency-red/20 animate-fade-in-up red-glow">
             <LinkForm
               link={editingLink}
-              onSubmit={editingLink ? 
-                (link) => handleUpdateLink(editingLink.id, link) :
-                handleAddLink
-              }
+              defaultCategory={editingLink ? undefined : (previousTab === 'insta' ? 'insta' : 'normal')}
+              onSubmit={async (link) => {
+                if (editingLink) {
+                  await handleUpdateLink(editingLink.id, link)
+                } else {
+                  await handleAddLink(link)
+                }
+                const category = link.category === 'insta' ? 'insta' : undefined
+                loadLinks(category)
+              }}
               onCancel={() => {
                 setEditingLink(null)
-                setActiveTab('links')
+                setActiveTab(previousTab)
               }}
             />
           </div>
@@ -322,14 +392,41 @@ export default function Home() {
         />
       )}
 
+      {/* Delete Confirmation Modal */}
+      {linkToDelete && (
+        <DeleteConfirmModal
+          linkTitle={linkToDelete.title}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setLinkToDelete(null)}
+        />
+      )}
+
       {/* Admin Panel Modal */}
       {showAdminPanel && (
         <AdminPanel
           links={links}
           onClose={() => setShowAdminPanel(false)}
-          onUpdate={loadLinks}
+          onUpdate={() => {
+            const category = activeTab === 'insta' ? 'insta' : undefined
+            loadLinks(category)
+          }}
         />
       )}
+
+      {/* Footer */}
+      <footer className="mt-12 pb-6 text-center">
+        <a
+          href="https://LiveNotes.com.br"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-gray-500 hover:text-emergency-red transition-colors duration-300 text-xs font-medium opacity-70 hover:opacity-100"
+        >
+          <span>Teste</span>
+          <span className="text-emergency-red/70 hover:text-emergency-red transition-colors underline decoration-emergency-red/30 hover:decoration-emergency-red/70">
+            LiveNotes
+          </span>
+        </a>
+      </footer>
     </div>
   )
 }
