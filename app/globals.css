@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --emergency-red: #DC2626;
+  --emergency-orange: #EA580C;
+  --emergency-amber: #F59E0B;
+}
+
+body {
+  @apply bg-gradient-to-br from-red-50 via-orange-50 to-amber-50 min-h-screen;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-red-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-emergency-red rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-emergency-red-dark;
+}
+
