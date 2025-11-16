@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "create-admin": "tsx scripts/create-admin.ts"
+    "create-admin": "tsx scripts/create-admin.ts",
+    "add-instagram": "tsx scripts/add-instagram-links.ts"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",
