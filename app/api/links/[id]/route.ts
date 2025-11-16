@@ -22,6 +22,7 @@ export async function PUT(
       title: body.title,
       url: body.url,
       editable: body.editable,
+      category: body.category,
     })
 
     if (!updatedLink) {

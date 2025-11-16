@@ -95,8 +95,15 @@ export default function Home() {
         body: JSON.stringify(link),
       })
       if (response.ok) {
-        loadLinks()
-        setActiveTab('links')
+        const category = link.category && link.category !== 'normal' ? link.category : undefined
+        const tabMap: Record<string, 'links' | 'insta' | 'livro' | 'spotify'> = {
+          'insta': 'insta',
+          'livro': 'livro',
+          'spotify': 'spotify',
+          'normal': 'links'
+        }
+        loadLinks(category)
+        setActiveTab(tabMap[link.category || 'normal'] || 'links')
         setEditingLink(null)
       }
     } catch (error) {
