@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
       title: body.title,
       url: body.url,
       editable: body.editable ?? true,
+      category: body.category || 'normal',
     })
     return NextResponse.json(newLink, { status: 201 })
   } catch (error) {

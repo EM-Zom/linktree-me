@@ -298,6 +298,11 @@ export default function Home() {
           </button>
           <button
             onClick={() => {
+              // Manter previousTab quando clicar em Adicionar
+              // Se estiver em uma aba específica, manter essa aba como previousTab
+              if (activeTab !== 'edit' && (activeTab === 'links' || activeTab === 'insta' || activeTab === 'livro' || activeTab === 'spotify')) {
+                setPreviousTab(activeTab)
+              }
               setEditingLink(null)
               setActiveTab('edit')
             }}
