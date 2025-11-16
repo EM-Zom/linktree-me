@@ -238,15 +238,14 @@ export default function Home() {
               setActiveTab('links')
               setEditingLink(null)
             }}
-            className={`flex-1 py-2.5 px-3 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden text-sm ${
+            className={`flex-1 py-2.5 px-3 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden ${
               activeTab === 'links'
                 ? 'bg-gradient-to-r from-emergency-red to-emergency-red-dark text-white shadow-lg scale-105 red-glow'
                 : 'text-gray-300 hover:bg-emergency-red/10 hover:text-white hover:scale-[1.02] border border-emergency-red/10'
             }`}
           >
-            <span className="relative z-10 flex items-center justify-center gap-1.5">
-              <FiLink className="text-base" />
-              Links
+            <span className="relative z-10 flex items-center justify-center text-lg">
+              <FiLink className="text-lg" />
             </span>
           </button>
           <button
