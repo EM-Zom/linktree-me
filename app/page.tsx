@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { FiLink, FiSettings, FiHeart, FiZap, FiSearch, FiX } from 'react-icons/fi'
+import { FiLink, FiSettings, FiHeart, FiSearch, FiX } from 'react-icons/fi'
 import LinkCard from '@/components/LinkCard'
 import LinkForm from '@/components/LinkForm'
 import AdminPanel from '@/components/AdminPanel'
@@ -208,7 +208,7 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 animate-slide-in">
               <div className="bg-emergency-red/30 backdrop-blur-md p-2.5 rounded-xl shadow-lg hover:bg-emergency-red/40 transition-all duration-300 hover:scale-105 border-2 border-emergency-red/50 red-glow">
-                <FiZap className="text-xl text-white" />
+                <span className="text-xl">🚨</span>
               </div>
               <div>
                 <h1 className="text-xl font-extrabold tracking-tight text-white drop-shadow-lg" style={{ textShadow: '0 2px 10px rgba(239, 68, 68, 0.5)' }}>
