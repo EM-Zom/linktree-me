@@ -480,10 +480,10 @@ export default function Home() {
           href="https://LiveNotes.com.br"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-gray-500 hover:text-emergency-red transition-colors duration-300 text-xs font-medium opacity-70 hover:opacity-100"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-emergency-black-dark/50 hover:bg-emergency-black-dark/70 border border-emergency-red/10 hover:border-emergency-red/20 rounded-lg text-gray-400 hover:text-gray-300 transition-all duration-300 text-xs font-medium opacity-60 hover:opacity-100 backdrop-blur-sm"
         >
           <span>Teste</span>
-          <span className="text-emergency-red/70 hover:text-emergency-red transition-colors underline decoration-emergency-red/30 hover:decoration-emergency-red/70">
+          <span className="text-emergency-red/60 hover:text-emergency-red/80 transition-colors">
             LiveNotes
           </span>
         </a>
