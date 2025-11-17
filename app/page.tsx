@@ -319,9 +319,8 @@ export default function Home() {
                 : 'text-gray-300 hover:bg-emergency-red/10 hover:text-white hover:scale-[1.02] border border-emergency-red/10'
             }`}
           >
-            <span className="relative z-10 flex items-center justify-center gap-1.5">
-              <FiHeart className="text-base" />
-              {editingLink ? 'Editar' : 'Adicionar'}
+            <span className="relative z-10 flex items-center justify-center text-lg font-bold">
+              {editingLink ? '✏️' : '+'}
             </span>
           </button>
         </div>
@@ -330,7 +329,7 @@ export default function Home() {
         {(activeTab === 'links' || activeTab === 'insta' || activeTab === 'livro' || activeTab === 'spotify') && (
           <div className="space-y-4">
             {/* Barra de Pesquisa */}
-            {filteredLinks.length > 0 && (
+            {(links.length > 0 || searchTerm) && (
               <div className="glass-strong rounded-2xl shadow-xl border border-emergency-red/20 animate-fade-in-up">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

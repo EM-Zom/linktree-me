@@ -1,6 +1,6 @@
 'use client'
 
-import { FiExternalLink, FiEdit2, FiTrash2, FiLock, FiArrowRight } from 'react-icons/fi'
+import { FiExternalLink, FiEdit2, FiTrash2, FiLock, FiArrowRight, FiCopy, FiShare2 } from 'react-icons/fi'
 
 interface Link {
   id: string
@@ -20,6 +20,58 @@ interface LinkCardProps {
 export default function LinkCard({ link, onEdit, onDelete, canEdit }: LinkCardProps) {
   const handleClick = () => {
     window.open(link.url, '_blank', 'noopener,noreferrer')
+  }
+
+  const handleCopyLink = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      await navigator.clipboard.writeText(link.url)
+      // Feedback visual temporário
+      const button = e.currentTarget as HTMLButtonElement
+      const originalContent = button.innerHTML
+      button.innerHTML = '<span class="text-green-400">✓</span>'
+      setTimeout(() => {
+        button.innerHTML = originalContent
+      }, 2000)
+    } catch (error) {
+      console.error('Erro ao copiar link:', error)
+      // Fallback para navegadores mais antigos
+      const textArea = document.createElement('textarea')
+      textArea.value = link.url
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+    }
+  }
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const shareData = {
+      title: link.title,
+      text: link.title,
+      url: link.url,
+    }
+
+    try {
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData)
+      } else {
+        // Fallback: copiar para clipboard
+        await navigator.clipboard.writeText(`${link.title}: ${link.url}`)
+        const button = e.currentTarget as HTMLButtonElement
+        const originalContent = button.innerHTML
+        button.innerHTML = '<span class="text-green-400">✓</span>'
+        setTimeout(() => {
+          button.innerHTML = originalContent
+        }, 2000)
+      }
+    } catch (error) {
+      // Usuário cancelou ou erro
+      if ((error as Error).name !== 'AbortError') {
+        console.error('Erro ao compartilhar:', error)
+      }
+    }
   }
 
   const getDisplayUrl = (url: string, category?: string) => {
@@ -72,30 +124,50 @@ export default function LinkCard({ link, onEdit, onDelete, canEdit }: LinkCardPr
         </div>
       </button>
       
-      {canEdit && (
-        <div className="flex items-center justify-end gap-2 px-5 pb-4 border-t border-emergency-red/10 pt-3 bg-emergency-black/30">
+      <div className="flex items-center justify-between gap-2 px-5 pb-4 border-t border-emergency-red/10 pt-3 bg-emergency-black/30">
+        <div className="flex items-center gap-2">
           <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onEdit()
-            }}
-            className="p-2.5 text-emergency-red hover:bg-emergency-red/10 rounded-xl transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-md border border-emergency-red/20 hover:border-emergency-red/40"
-            aria-label="Editar link"
+            onClick={handleCopyLink}
+            className="p-2.5 text-gray-400 hover:text-emergency-red hover:bg-emergency-red/10 rounded-xl transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-md border border-emergency-red/10 hover:border-emergency-red/40"
+            aria-label="Copiar link"
+            title="Copiar link"
           >
-            <FiEdit2 className="text-lg" />
+            <FiCopy className="text-lg" />
           </button>
           <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onDelete()
-            }}
-            className="p-2.5 text-emergency-red hover:bg-emergency-red/10 rounded-xl transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-md border border-emergency-red/20 hover:border-emergency-red/40"
-            aria-label="Deletar link"
+            onClick={handleShare}
+            className="p-2.5 text-gray-400 hover:text-emergency-red hover:bg-emergency-red/10 rounded-xl transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-md border border-emergency-red/10 hover:border-emergency-red/40"
+            aria-label="Compartilhar link"
+            title="Compartilhar link"
           >
-            <FiTrash2 className="text-lg" />
+            <FiShare2 className="text-lg" />
           </button>
         </div>
-      )}
+        {canEdit && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit()
+              }}
+              className="p-2.5 text-emergency-red hover:bg-emergency-red/10 rounded-xl transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-md border border-emergency-red/20 hover:border-emergency-red/40"
+              aria-label="Editar link"
+            >
+              <FiEdit2 className="text-lg" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete()
+              }}
+              className="p-2.5 text-emergency-red hover:bg-emergency-red/10 rounded-xl transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-md border border-emergency-red/20 hover:border-emergency-red/40"
+              aria-label="Deletar link"
+            >
+              <FiTrash2 className="text-lg" />
+            </button>
+          </div>
+        )}
+      </div>
       
       {!link.editable && !canEdit && (
         <div className="flex items-center justify-end gap-2 px-5 pb-4 border-t border-emergency-red/10 pt-3 bg-emergency-black/30">
