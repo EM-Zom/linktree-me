@@ -168,15 +168,6 @@ export default function LinkCard({ link, onEdit, onDelete, canEdit }: LinkCardPr
           </div>
         )}
       </div>
-      
-      {!link.editable && !canEdit && (
-        <div className="flex items-center justify-end gap-2 px-5 pb-4 border-t border-emergency-red/10 pt-3 bg-emergency-black/30">
-          <div className="flex items-center gap-2 text-gray-500">
-            <FiLock className="text-sm" />
-            <span className="text-xs font-medium">Bloqueado para edição</span>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
